@@ -14,7 +14,7 @@ One way is to make a new ID field in your model, then convert it to primary key,
 Override `Migration.apply` method in your migration class. Let's say our model name is `Todo`:  
 ```
     def apply(self, project_state, schema_editor, collect_sql=False):
-        """Override Migration.save"""
+        """Override Migration.apply"""
 
         project_state = super(Migration, self).apply(project_state, schema_editor, collect_sql)
 
@@ -38,4 +38,12 @@ Override `Migration.apply` method in your migration class. Let's say our model n
 `id = models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')`  
 9. Apply migration then remove the `id` field from model. Removing it will not have any effect now because Django by default creates `AutoField` `id` for primary key and we have replicated just that.
 
-It looks like we could have done Step #6 and Step #8 and apply migration only once but if we combine these steps then instead of renaming `new_id` column to `id`, Django will drop the `new_id` column and create new one named `id`. This can be seen in the resulting migration file that Django creates. We do not want that because we have already populated our `new_id` column  and we just need a `migrations.RenameField` type migration.
+It looks like we could have done Step #6 and Step #8 and apply migration only once but if we combine these steps then instead of renaming `new_id` column to `id`, Django will drop the `new_id` column and create new one named `id`. This can be seen in the resulting migration file that Django creates. We do not want that because we have already populated our `new_id` column  and we just need a `migrations.RenameField` operation.
+
+## Solution #2
+Another way is to create a new Model with same table columns as properties but not explicitly providing the `id` field. Django will then create `AutoField` `id` by itself since that is the default behaviour. We can then copy all data from old table to new table using SQL query like  
+```
+INSERT INTO new_table (column1, column2, column3)
+SELECT column1, column2, column3 FROM old_table
+```
+This method on paper looks simpler but it involves manually migrating data from one table to another. It will also require to duplicate your old model code and any associated logic as well which is more risky, error prone and may require extensive testing.
