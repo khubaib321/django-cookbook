@@ -45,16 +45,4 @@ Another way is to create a new Model with same table columns as properties but n
 INSERT INTO new_table (column1, column2, column3)
 SELECT column1, column2, column3 FROM old_table
 ```
-This method on paper looks simpler but it involves manually migrating data from one table to another. It will also require to duplicate your old model code and any associated logic as well which is more risky, error prone and may require extensive testing.  
-
-## Solution #3
-Use Solution #2 but instead of replicating model logic change the `db_table` property in your model's `Meta` class.
-```
-class MyModel(models.Model):
-    """Your existing model class"""
-    
-    class Meta:
-        """Meta class of your model"""
-        
-        db_table = 'new_table'
-```
+This method on paper looks simpler but it involves manually migrating data from one table to another. It will also require to duplicate your old model code and any associated logic as well which is more risky, error prone and may require extensive testing.
