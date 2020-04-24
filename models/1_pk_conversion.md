@@ -11,23 +11,22 @@ One way is to make a new ID field in your model, then convert it to primary key,
 1. Create an Integer field in your model (`new_id`) and make migration (do not migrate yet).  
 `new_id = models.IntegerField(null=True)`  
 2. Open migration file and add code to populate the `new_id` field with proper auto increment values.
-Override `Migration.apply` method in your migration class. Let's say our model name is `Todo`:  
+Add new method in your migration file. Let's say our app name is `firstapp` model name is `Todo`:  
 ```
-    def apply(self, project_state, schema_editor, collect_sql=False):
-        """Override Migration.apply"""
+def populate_new_id(apps, schema_editor):
+    """Populate new id field"""
 
-        project_state = super(Migration, self).apply(project_state, schema_editor, collect_sql)
+    model = apps.get_model('firstapp', 'Todo')
+    queryset = model.objects.all().order_by('date_created')
 
-        # Populate new_id field with AutoField data (auto increment values)
-        queryset = Todo.objects.all().order_by('date_created')
-        for index, todo in enumerate(queryset):
-            todo.new_id = index + 1
-            todo.save()
-
-        return project_state
+    for index, todo in enumerate(queryset):
+        todo.new_id = index + 1
+        todo.save()
 ```
-3. Now apply migration and see the `new_id` field in your table with proper auto increment values.
-4. Since we have proper auto incrment values in our `new_id` field, we can safely change it's type to `AutoField`. We can also now make it our new primary key as it has unique values that won't violate any primary key constraints.   
+Now this method should be added in operations array so that it is run when Django applies migration.  
+`migrations.RunPython(populate_new_id),`  
+3. Now apply migration and see the `new_id` field in your table with proper auto increment values.  
+4. Since we have correct auto incrment values in our `new_id` field, we can safely change it's type to `AutoField`. We can also now make it our new primary key as it has unique values that won't violate any primary key constraints.   
 `id = models.UUIDField(primary_key=False, default=uuid4, editable=False)`  
 `new_id = models.AutoField(primary_key=True, serialize=False, verbose_name='ID')`  
 5. Now applying migration with above changes, Django might also ask for a default value but it can be ignored as our field is already populated with auto increment values. We now have `new_id` as our primary key and the `id` is now just a normal field.
