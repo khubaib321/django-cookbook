@@ -29,7 +29,7 @@ Now this method should be added in operations array so that it is run when Djang
 4. Since we have correct auto incrment values in our `new_id` field, we can safely change it's type to `AutoField`. We can also now make it our new primary key as it has unique values that won't violate any primary key constraints.   
 `id = models.UUIDField(primary_key=False, default=uuid4, editable=False)`  
 `new_id = models.AutoField(primary_key=True, serialize=False, verbose_name='ID')`  
-5. Now applying migration with above changes, Django might also ask for a default value but it can be ignored as our field is already populated with auto increment values. We now have `new_id` as our primary key and the `id` is now just a normal field.
+5. Now applying migration with above changes, Django might also ask for a default value but it can be ignored as our field is already populated with auto increment values. We now have `new_id` as our primary key and the `id` is now just a normal field.  
 6. Now we can remove the `id` property from our model and rename `new_id` to take its place.  
 `id = models.AutoField(primary_key=True, serialize=False, verbose_name='ID')`  
 7. Apply migration with above changes and see in database that we only have one `id` column as primary key and correct auto incremented values.
