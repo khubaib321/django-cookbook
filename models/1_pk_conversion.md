@@ -10,6 +10,7 @@ Now the problem is we need to convert this `UUID` field into a Django `AutoField
 One way is to make a new ID field in your model, then convert it to primary key, and remove the `UUID` field.
 1. Create an Integer field in your model (`new_id`) and make migration (do not migrate yet).  
 `new_id = models.IntegerField(null=True)`  
+
 2. Open migration file and add code to populate the `new_id` field with proper auto increment values.
 Add new method in your migration file. Let's say our app name is `firstapp` model name is `Todo`:  
 ```
@@ -25,16 +26,23 @@ def populate_new_id(apps, schema_editor):
 ```
 Now this method should be added in operations array so that it is run when Django applies migration.  
 `migrations.RunPython(populate_new_id),`  
+
 3. Now apply migration and see the `new_id` field in your table with proper auto increment values.  
+
 4. Since we have correct auto incrment values in our `new_id` field, we can safely change it's type to `AutoField`. We can also now make it our new primary key as it has unique values that won't violate any primary key constraints.   
 `id = models.UUIDField(primary_key=False, default=uuid4, editable=False)`  
 `new_id = models.AutoField(primary_key=True, serialize=False, verbose_name='ID')`  
+
 5. Now applying migration with above changes, Django might also ask for a default value but it can be ignored as our field is already populated with auto increment values. We now have `new_id` as our primary key and the `id` is now just a normal field.  
+
 6. Now we can remove the `id` property from our model and rename `new_id` to take its place.  
 `id = models.AutoField(primary_key=True, serialize=False, verbose_name='ID')`  
+
 7. Apply migration with above changes and see in database that we only have one `id` column as primary key and correct auto incremented values.
+
 8. Add `auto_created=True` to the `id` property.  
 `id = models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')`  
+
 9. Apply migration then remove the `id` field from model. Removing it will not have any effect now because Django by default creates `AutoField` `id` for primary key and we have replicated just that.
 
 It looks like we could have done Step #6 and Step #8 and apply migration only once but if we combine these steps then instead of renaming `new_id` column to `id`, Django will drop the `new_id` column and create new one named `id`. This can be seen in the resulting migration file that Django creates. We do not want that because we have already populated our `new_id` column  and we just need a `migrations.RenameField` operation.
